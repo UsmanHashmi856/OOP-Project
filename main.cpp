@@ -3,8 +3,47 @@
 #include <ctime>
 #include <cstdlib>
 #include <string>
-
 using namespace std;
+
+// CONFIGURABLE GAME CONSTANTS 
+
+// Game Window
+const int WINDOW_WIDTH = 1200;
+const int WINDOW_HEIGHT = 800;
+
+// Player
+const float PLAYER_WIDTH = 40.f;
+const float PLAYER_HEIGHT = 40.f;
+const float PLAYER_SPEED = 10.f;
+const float PLAYER_START_X = 600.f;
+const float PLAYER_START_Y = 700.f;
+const float PLAYER_HEALTH = 1000.f;
+const sf::Color PLAYER_COLOR = sf::Color::Green;
+
+// Zombie
+const float ZOMBIE_WIDTH = 30.f;
+const float ZOMBIE_HEIGHT = 30.f;
+const float ZOMBIE_SPEED = 2.f;
+const sf::Color ZOMBIE_COLOR = sf::Color::Magenta;
+const int ZOMBIE_SPAWN_INTERVAL = 60; // in frames
+
+// Bullet
+const float BULLET_WIDTH = 5.f;
+const float BULLET_HEIGHT = 10.f;
+const float BULLET_SPEED = 20.f;
+const sf::Color BULLET_COLOR = sf::Color::Yellow;
+const int FIRE_RATE_INTERVAL = 10; // in frames
+
+// Game Settings
+const int INITIAL_AMMO = 100;
+const int DAMAGE_PER_ZOMBIE = 10;
+const int SCORE_PER_ZOMBIE = 5;
+
+// UI
+const sf::Color TEXT_COLOR = sf::Color::White;
+const sf::Color HEALTHBAR_COLOR = sf::Color::Red;
+const sf::Color GAME_OVER_TEXT_COLOR = sf::Color::Red;
+// ================================================================
 
 class Entity {
 protected:
@@ -29,23 +68,25 @@ public:
 
 class Player : public Entity {
 public:
-    Player(float x, float y) : Entity(40.f, 40.f, sf::Color::Green, x, y, 5.f) {}
+    Player(float x, float y) 
+    : Entity(PLAYER_WIDTH, PLAYER_HEIGHT, PLAYER_COLOR, x, y, PLAYER_SPEED) {}
 
     void update() override {
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) && shape.getPosition().x > 0)
             shape.move(-speed, 0);
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && shape.getPosition().x < 1160)
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && shape.getPosition().x < WINDOW_WIDTH - PLAYER_WIDTH)
             shape.move(speed, 0);
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && shape.getPosition().y > 80)
             shape.move(0, -speed);
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && shape.getPosition().y < 760)
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && shape.getPosition().y < WINDOW_HEIGHT - PLAYER_HEIGHT)
             shape.move(0, speed);
     }
 };
 
 class Zombie : public Entity {
 public:
-    Zombie(float x, float y) : Entity(30.f, 30.f, sf::Color::Magenta, x, y, 2.f) {}
+    Zombie(float x, float y) 
+    : Entity(ZOMBIE_WIDTH, ZOMBIE_HEIGHT, ZOMBIE_COLOR, x, y, ZOMBIE_SPEED) {}
 
     void update() override {
         shape.move(0.f, speed);
@@ -54,7 +95,8 @@ public:
 
 class Bullet : public Entity {
 public:
-    Bullet(float x, float y) : Entity(5.f, 10.f, sf::Color::Yellow, x, y, 15.f) {}
+    Bullet(float x, float y) 
+    : Entity(BULLET_WIDTH, BULLET_HEIGHT, BULLET_COLOR, x, y, BULLET_SPEED) {}
 
     void update() override {
         shape.move(0.f, -speed);
@@ -80,12 +122,12 @@ private:
     float spawnTimer, shootTimer;
 
     void spawnZombie() {
-        float x = 80 + rand() % 1040;
+        float x = 80 + rand() % (WINDOW_WIDTH - 160);
         zombies.push_back(Zombie(x, 0));
     }
 
     void shootBullet() {
-        float px = player.getPosition().x + 17.5f;  // center of 40px wide player
+        float px = player.getPosition().x + (PLAYER_WIDTH - BULLET_WIDTH) / 2;
         float py = player.getPosition().y;
         bullets.push_back(Bullet(px, py));
         ammo--;
@@ -95,9 +137,9 @@ private:
         for (size_t i = 0; i < zombies.size();) {
             zombies[i].update();
             if (zombies[i].getBounds().intersects(player.getBounds())) {
-                health -= 10;
+                health -= DAMAGE_PER_ZOMBIE;
                 zombies.erase(zombies.begin() + i);
-            } else if (zombies[i].getPosition().y > 800) {
+            } else if (zombies[i].getPosition().y > WINDOW_HEIGHT) {
                 zombies.erase(zombies.begin() + i);
             } else {
                 i++;
@@ -110,7 +152,7 @@ private:
             for (size_t j = 0; j < zombies.size(); j++) {
                 if (bullets[i].getBounds().intersects(zombies[j].getBounds())) {
                     zombies.erase(zombies.begin() + j);
-                    score += 5;
+                    score += SCORE_PER_ZOMBIE;
                     hit = true;
                     break;
                 }
@@ -128,19 +170,19 @@ private:
         ammoText.setString("Ammo: " + to_string(ammo));
     }
 
-    void setupText(sf::Text& text, const string& str, float x, float y, int size) {
+    void setupText(sf::Text& text, const string& str, float x, float y, int size, sf::Color color) {
         text.setFont(font);
         text.setString(str);
         text.setCharacterSize(size);
         text.setPosition(x, y);
-        text.setFillColor(sf::Color::White);
+        text.setFillColor(color);
     }
 
     void resetGame() {
-        player = Player(600.f, 700.f);
-        health = 1000.f;
+        player = Player(PLAYER_START_X, PLAYER_START_Y);
+        health = PLAYER_HEALTH;
         score = 0;
-        ammo = 30;
+        ammo = INITIAL_AMMO;
         isGameOver = false;
         spawnTimer = 0;
         shootTimer = 0;
@@ -149,8 +191,8 @@ private:
     }
 
 public:
-    Game() : window(sf::VideoMode(1200, 800), "Zombie Shooter"), player(600.f, 700.f),
-             health(1000.f), score(0), ammo(30), isGameOver(false),
+    Game() : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Zombie Land"), player(PLAYER_START_X, PLAYER_START_Y),
+             health(PLAYER_HEALTH), score(0), ammo(INITIAL_AMMO), isGameOver(false),
              spawnTimer(0), shootTimer(0) {
         window.setFramerateLimit(60);
 
@@ -158,13 +200,12 @@ public:
             window.close();
         }
 
-        setupText(scoreText, "Score: 0", 10, 10, 24);
-        setupText(ammoText, "Ammo: 30", 200, 10, 24);
-        setupText(gameOverText, "Game Over!\nPress SPACE to Restart", 300, 300, 48);
-        gameOverText.setFillColor(sf::Color::Red);
+        setupText(scoreText, "Score: 0", 10, 10, 24, TEXT_COLOR);
+        setupText(ammoText, "Ammo: 100", 200, 10, 24, TEXT_COLOR);
+        setupText(gameOverText, "Game Over!\nPress SPACE to Restart", 300, 300, 48, GAME_OVER_TEXT_COLOR);
 
-        healthBar.setFillColor(sf::Color::Red);
-        healthBar.setPosition(60, 760);
+        healthBar.setFillColor(HEALTHBAR_COLOR);
+        healthBar.setPosition(60, WINDOW_HEIGHT - 40);
         healthBar.setSize(sf::Vector2f(health, 20));
     }
 
@@ -174,29 +215,27 @@ public:
             while (window.pollEvent(event)) {
                 if (event.type == sf::Event::Closed)
                     window.close();
-                if (isGameOver && event.type == sf::Event::KeyPressed) {
-                    if (event.key.code == sf::Keyboard::Space)
-                        resetGame();
-                }
+                if (isGameOver && event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space)
+                    resetGame();
             }
 
             if (!isGameOver) {
                 player.update();
 
                 spawnTimer += 1;
-                if (spawnTimer >= 60) {
+                if (spawnTimer >= ZOMBIE_SPAWN_INTERVAL) {
                     spawnZombie();
                     spawnTimer = 0;
                 }
 
                 shootTimer += 1;
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && shootTimer >= 10 && ammo > 0) {
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && shootTimer >= FIRE_RATE_INTERVAL && ammo > 0) {
                     shootBullet();
                     shootTimer = 0;
                 }
 
                 if (ammo == 0 && sf::Keyboard::isKeyPressed(sf::Keyboard::R)) {
-                    ammo = 30;
+                    ammo = INITIAL_AMMO;
                 }
 
                 checkCollisions();
@@ -208,9 +247,8 @@ public:
 
             window.clear();
             player.draw(window);
-            for (size_t i = 0; i < zombies.size(); i++) zombies[i].draw(window);
-            for (size_t i = 0; i < bullets.size(); i++) bullets[i].draw(window);
-
+            for (Zombie& z : zombies) z.draw(window);
+            for (Bullet& b : bullets) b.draw(window);
             window.draw(healthBar);
             window.draw(scoreText);
             window.draw(ammoText);
