@@ -3,7 +3,7 @@
 ## Overview
 
 "Zombie-Land" is a 2D survival game development project focused on demonstrating the effective application of Object-Oriented Programming (OOP) principles. Players will navigate a challenging environment, strategically fend off hordes of zombies, and strive for survival. This project aims to showcase the power of OOP in creating dynamic and engaging game mechanics within a captivating 2D experience.
-![FastLogo](Screenshot 2025-05-01 154619.png)
+![FastLogo](https://github.com/UsmanHashmi856/OOP-Project/commit/f57ae716d8d721a1277a9a846f75f472e9789bf8)
 ## Group Members
 
 * Haris Ali (24K-2019)
