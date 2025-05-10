@@ -1,7 +1,7 @@
 # Compiler and linker settings
 CXX = g++
 CXXFLAGS = -I"C:/SFML-2.6.1/include" -std=c++17
-LDFLAGS = -L"C:/SFML-2.6.1/lib" -lsfml-graphics -lsfml-window -lsfml-system
+LDFLAGS = -L"C:/SFML-2.6.1/lib" -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
 
 # Source and target files
 SRC = main.cpp
